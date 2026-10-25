@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Withdrawal Methods - 2c2d Solutions{% endblock %}
+{% block page_title %}Withdrawal Methods{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card dashboard-card table-shell">
+            <div class="card-header"><h5 class="card-title mb-0">Configured Methods</h5></div>
+            {% if methods %}
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead><tr><th>Name</th><th>Type</th><th>Active</th><th>Min</th><th></th></tr></thead>
+                    <tbody>
+                        {% for m in methods %}
+                        <tr>
+                            <td>{{ m.name }}</td>
+                            <td>{{ m.get_withdrawal_type_display }}</td>
+                            <td>{% if m.is_active %}Yes{% else %}No{% endif %}</td>
+                            <td>${{ m.minimum_amount }}</td>
+                            <td><a href="{% url 'wallet:admin_edit_withdrawal_method' m.id %}" class="btn btn-sm btn-outline-primary">Edit</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state py-4"><p class="mb-0">No withdrawal methods configured.</p></div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card dashboard-card">
+            <div class="card-header"><h5 class="card-title mb-0">Add Method</h5></div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <button type="submit" class="btn btn-primary w-100 mt-2">Create Method</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

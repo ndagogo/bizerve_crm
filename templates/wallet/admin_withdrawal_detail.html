@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Withdrawal #{{ withdrawal.id }} - 2c2d Solutions{% endblock %}
+{% block page_title %}Review Withdrawal{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card dashboard-card">
+            <div class="card-header"><h5 class="card-title mb-0">Request Details</h5></div>
+            <div class="card-body">
+                <table class="table mb-0">
+                    <tr><th class="text-muted fw-medium" style="width:35%;">User</th><td>{{ withdrawal.user.get_full_name|default:withdrawal.user.username }}</td></tr>
+                    <tr><th class="text-muted fw-medium">Method</th><td>{{ withdrawal.withdrawal_method.name }}</td></tr>
+                    <tr><th class="text-muted fw-medium">Amount</th><td>${{ withdrawal.amount }}</td></tr>
+                    <tr><th class="text-muted fw-medium">Fee</th><td>${{ withdrawal.fee }}</td></tr>
+                    <tr><th class="text-muted fw-medium">Net Amount</th><td>${{ withdrawal.net_amount }}</td></tr>
+                    <tr><th class="text-muted fw-medium">Status</th><td><span class="badge bg-{{ withdrawal.get_status_color }}">{{ withdrawal.get_status_display }}</span></td></tr>
+                    <tr><th class="text-muted fw-medium">Submitted</th><td>{{ withdrawal.created_at }}</td></tr>
+                    {% if withdrawal.bank_name %}<tr><th class="text-muted fw-medium">Bank</th><td>{{ withdrawal.bank_name }} — {{ withdrawal.account_number }} ({{ withdrawal.account_name }})</td></tr>{% endif %}
+                    {% if withdrawal.paypal_email %}<tr><th class="text-muted fw-medium">PayPal</th><td>{{ withdrawal.paypal_email }}</td></tr>{% endif %}
+                    {% if withdrawal.mobile_number %}<tr><th class="text-muted fw-medium">Mobile</th><td>{{ withdrawal.mobile_number }}</td></tr>{% endif %}
+                    {% if withdrawal.crypto_wallet %}<tr><th class="text-muted fw-medium">Crypto</th><td>{{ withdrawal.crypto_wallet }}</td></tr>{% endif %}
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card dashboard-card">
+            <div class="card-header"><h5 class="card-title mb-0">Update Status</h5></div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-select">
+                            {% for value, label in withdrawal.STATUS_CHOICES %}
+                            <option value="{{ value }}" {% if withdrawal.status == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Admin Notes</label>
+                        <textarea name="admin_notes" class="form-control" rows="4">{{ withdrawal.admin_notes }}</textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Save Changes</button>
+                </form>
+                <a href="{% url 'wallet:admin_withdrawal_list' %}" class="btn btn-outline-secondary w-100 mt-2">Back to List</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

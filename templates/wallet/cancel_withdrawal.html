@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Cancel Withdrawal - 2c2d Solutions{% endblock %}
+{% block page_title %}Cancel Withdrawal{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card dashboard-card">
+            <div class="card-body p-4">
+                <h4 class="mb-2" style="font-weight:700;">Cancel Withdrawal #{{ withdrawal.id }}?</h4>
+                <p class="text-muted">
+                    Amount <strong>${{ withdrawal.amount }}</strong> will be refunded to your wallet.
+                </p>
+                <form method="post" class="d-flex gap-2 mt-3">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Confirm Cancellation</button>
+                    <a href="{% url 'wallet:withdrawal_history' %}" class="btn btn-outline-secondary">Go Back</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

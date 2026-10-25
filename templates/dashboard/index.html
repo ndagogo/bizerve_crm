@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ dashboard_title }} - 2c2d Business Solution</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            background-color: #f8f9fa;
+            min-height: calc(100vh - 56px);
+            box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+        }
+        .sidebar .nav-link {
+            font-weight: 500;
+            color: #333;
+        }
+        .sidebar .nav-link.active {
+            color: #2470dc;
+        }
+        .navbar-brand {
+            font-weight: bold;
+        }
+        .role-badge {
+            font-size: 0.8em;
+            padding: 0.2em 0.6em;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'dashboard:dashboard' %}">
+                2c2d Business Solution
+                <small class="role-badge bg-secondary ms-2">{{ user.get_user_type_display }}</small>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
+                        <span class="navbar-text me-3">
+                            Welcome, {{ user.get_full_name|default:user.username }}
+                        </span>
+                        <a class="nav-link" href="{% url 'accounts:logout' %}">Logout</a>
+                    {% else %}
+                        <a class="nav-link" href="{% url 'login' %}">Login</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar - Dynamic based on user role -->
+            {% if user.is_authenticated %}
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <!-- Common Navigation for All Roles -->
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{% url 'dashboard:dashboard' %}">
+                                📊 {{ dashboard_title }}
+                            </a>
+                        </li>
+                        
+                        <!-- Super Admin & Admin Navigation -->
+                        {% if user.user_type in 'super_admin,admin' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                👥 User Management
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                📋 All Tasks
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                ➕ Create Task
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/">
+                                ⚙️ System Admin
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        <!-- Staff Navigation -->
+                        {% if user.user_type == 'staff' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'tasks:task_list' %}">
+                                📋 My Tasks
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                📊 Task Performance
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        <!-- Partner Navigation -->
+                        {% if user.user_type == 'partner' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                📤 Submit Job
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                📋 My Submissions
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        <!-- Common for Staff & Partners -->
+                        {% if user.user_type in 'staff,partner' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                💰 My Wallet
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        <!-- Reports for Admins -->
+                        {% if user.user_type in 'super_admin,admin' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                📈 Reports & Analytics
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </nav>
+            {% endif %}
+
+            <!-- Main Content - Dynamic based on user role -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                {% if messages %}
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-3" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">{{ dashboard_title }}</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <span class="badge bg-primary me-2">{{ user.get_user_type_display }}</span>
+                    </div>
+                </div>
+
+                <!-- Role-Specific Welcome Cards -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card text-white bg-primary mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Welcome, {{ user.get_full_name|default:user.username }}!</h5>
+                                <p class="card-text">
+                                    <strong>Role:</strong> {{ user.get_user_type_display }}<br>
+                                    <strong>Email:</strong> {{ user.email }}<br>
+                                    <strong>Joined:</strong> {{ user.date_joined|date:"M d, Y" }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card text-white bg-success mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Quick Stats</h5>
+                                <p class="card-text">
+                                    {% if user.user_type in 'super_admin,admin' %}
+                                        <strong>Total Users:</strong> 100<br>
+                                        <strong>Active Tasks:</strong> 0<br>
+                                        <strong>Completed Today:</strong> 0
+                                    {% elif user.user_type == 'staff' %}
+                                        <strong>Tasks Assigned:</strong> 0<br>
+                                        <strong>Tasks Completed:</strong> 0<br>
+                                        <strong>Wallet Balance:</strong> $0.00
+                                    {% elif user.user_type == 'partner' %}
+                                        <strong>Jobs Submitted:</strong> 0<br>
+                                        <strong>Jobs Processing:</strong> 0<br>
+                                        <strong>Jobs Completed:</strong> 0
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Role-Specific Quick Actions -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Quick Actions</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="btn-group" role="group">
+                                    <!-- Super Admin Actions -->
+                                    {% if user.user_type == 'super_admin' %}
+                                    <a href="/admin/" class="btn btn-primary">System Administration</a>
+                                    <a href="#" class="btn btn-info">Manage Users</a>
+                                    <a href="#" class="btn btn-success">View All Tasks</a>
+                                    {% endif %}
+                                    
+                                    <!-- Admin Actions -->
+                                    {% if user.user_type == 'admin' %}
+                                    <a href="#" class="btn btn-primary">Create New Task</a>
+                                    <a href="#" class="btn btn-info">Assign Tasks</a>
+                                    <a href="#" class="btn btn-success">Monitor Progress</a>
+                                    {% endif %}
+                                    
+                                    <!-- Staff Actions -->
+                                    {% if user.user_type == 'staff' %}
+                                    <a href="{% url 'tasks:task_list' %}" class="btn btn-primary">View My Tasks</a>
+                                    <a href="#" class="btn btn-info">Check Wallet</a>
+                                    <a href="#" class="btn btn-success">Performance</a>
+                                    {% endif %}
+                                    
+                                    <!-- Partner Actions -->
+                                    {% if user.user_type == 'partner' %}
+                                    <a href="#" class="btn btn-primary">Submit New Job</a>
+                                    <a href="#" class="btn btn-info">Track Submissions</a>
+                                    <a href="#" class="btn btn-success">Payment History</a>
+                                    {% endif %}
+                                    
+                                    <!-- Common Action -->
+                                    <a href="{% url 'accounts:logout' %}" class="btn btn-outline-danger">Logout</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Role-Specific Recent Activity -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    {% if user.user_type in 'super_admin,admin' %}System Overview
+                                    {% elif user.user_type == 'staff' %}My Recent Tasks
+                                    {% elif user.user_type == 'partner' %}My Job Submissions
+                                    {% endif %}
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                {% if user.user_type in 'super_admin,admin' %}
+                                <p class="text-muted">System administration dashboard will show user activity, task statistics, and system health.</p>
+                                {% elif user.user_type == 'staff' %}
+                                <p class="text-muted">Your assigned tasks, completion status, and performance metrics will appear here.</p>
+                                {% elif user.user_type == 'partner' %}
+                                <p class="text-muted">Your job submission history, status updates, and communication will appear here.</p>
+                                {% endif %}
+                                
+                                <div class="alert alert-info">
+                                    <strong>Role Detected:</strong> {{ user.get_user_type_display }}<br>
+                                    <strong>Dashboard Type:</strong> {{ dashboard_type }}<br>
+                                    <strong>Access Level:</strong> 
+                                    {% if user.user_type == 'super_admin' %}Full System Access
+                                    {% elif user.user_type == 'admin' %}Administrative Access
+                                    {% elif user.user_type == 'staff' %}Task Processing Access
+                                    {% elif user.user_type == 'partner' %}Job Submission Access
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

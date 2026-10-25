@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Partner Portal - 2c2d Solutions{% endblock %}
+{% block page_title %}Partner Portal{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3"><div class="card dashboard-card"><div class="card-body stat-card"><p class="stat-label">Total Jobs</p><h3 class="stat-number">{{ stats.total }}</h3></div></div></div>
+    <div class="col-6 col-xl-3"><div class="card dashboard-card"><div class="card-body stat-card"><p class="stat-label">Pending</p><h3 class="stat-number text-warning">{{ stats.pending }}</h3></div></div></div>
+    <div class="col-6 col-xl-3"><div class="card dashboard-card"><div class="card-body stat-card"><p class="stat-label">In Progress</p><h3 class="stat-number text-primary">{{ stats.in_progress }}</h3></div></div></div>
+    <div class="col-6 col-xl-3"><div class="card dashboard-card"><div class="card-body stat-card"><p class="stat-label">Completed</p><h3 class="stat-number text-success">{{ stats.completed }}</h3></div></div></div>
+</div>
+
+<div class="card dashboard-card table-shell">
+    <div class="card-header"><h5 class="card-title mb-0">Recent Submissions</h5></div>
+    {% if recent_tasks %}
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>Title</th><th>Type</th><th>Status</th><th>Amount</th><th></th></tr></thead>
+            <tbody>
+                {% for task in recent_tasks %}
+                <tr>
+                    <td>{{ task.title }}</td>
+                    <td>{{ task.get_task_type_display }}</td>
+                    <td><span class="badge bg-{{ task.get_status_color }}">{{ task.get_status_display }}</span></td>
+                    <td>${{ task.amount }}</td>
+                    <td><a href="{% url 'tasks:task_detail' task.id %}" class="btn btn-sm btn-outline-primary">View</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="bi bi-inbox"></i>
+        <h4>No submissions yet</h4>
+        <p>Contact an admin to create tasks on your behalf.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

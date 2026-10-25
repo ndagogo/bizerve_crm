@@ -1,0 +1,46 @@
+{% extends 'accounts/auth_base.html' %}
+
+{% block title %}Sign In - 2c2d Solutions{% endblock %}
+{% block auth_subtitle %}Sign in to continue{% endblock %}
+
+{% block content %}
+{% if form.errors %}
+<div class="alert alert-danger py-2">
+    Your username and password didn't match. Please try again.
+</div>
+{% endif %}
+
+{% if next %}
+    {% if user.is_authenticated %}
+    <div class="alert alert-warning py-2">
+        Your account doesn't have access to this page. Please sign in with an authorized account.
+    </div>
+    {% else %}
+    <div class="alert alert-info py-2">Please sign in to continue.</div>
+    {% endif %}
+{% endif %}
+
+<form method="post" novalidate>
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="id_username" class="form-label">Username</label>
+        <input type="text" name="username" class="form-control" id="id_username"
+               placeholder="Enter your username" required autofocus autocomplete="username">
+    </div>
+    <div class="mb-3">
+        <label for="id_password" class="form-label">Password</label>
+        <input type="password" name="password" class="form-control" id="id_password"
+               placeholder="Enter your password" required autocomplete="current-password">
+    </div>
+    <div class="d-grid">
+        <button type="submit" class="btn btn-primary btn-lg">Sign In</button>
+    </div>
+    <input type="hidden" name="next" value="{{ next }}">
+</form>
+{% endblock %}
+
+{% block auth_footer %}
+<div class="auth-footer">
+    <a href="{% url 'accounts:password_reset' %}">Forgot password?</a>
+</div>
+{% endblock %}

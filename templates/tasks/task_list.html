@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% load role_tags %}
+
+{% block title %}Task Management - 2c2d Solutions{% endblock %}
+{% block page_title %}Task Management{% endblock %}
+
+{% block content %}
+<div class="page-toolbar">
+    <div>
+        <h4>
+            {% if user|has_role:'super_admin,admin' %}All Tasks
+            {% elif user.user_type == 'staff' %}My Tasks
+            {% else %}My Submissions{% endif %}
+        </h4>
+        <p>
+            {% if user|has_role:'super_admin,admin' %}Manage and track all tasks in the system
+            {% elif user.user_type == 'staff' %}Tasks assigned to you for processing
+            {% else %}Your job submissions and their status{% endif %}
+        </p>
+    </div>
+    {% if user|has_role:'super_admin,admin' %}
+    <a href="{% url 'tasks:create_task' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i>Create Task
+    </a>
+    {% endif %}
+</div>
+
+<div class="card dashboard-card mb-4">
+    <div class="card-body">
+        <div class="filter-bar">
+            <div style="min-width: 220px;">
+                <label class="form-label" for="statusFilter">Filter by status</label>
+                <select id="statusFilter" class="form-select" onchange="window.location.href=this.value">
+                    <option value="{% url 'tasks:task_list' %}" {% if not current_status %}selected{% endif %}>All Tasks</option>
+                    <option value="{% url 'tasks:task_list' %}?status=pending" {% if current_status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="{% url 'tasks:task_list' %}?status=accepted" {% if current_status == 'accepted' %}selected{% endif %}>Accepted</option>
+                    <option value="{% url 'tasks:task_list' %}?status=processing" {% if current_status == 'processing' %}selected{% endif %}>Processing</option>
+                    <option value="{% url 'tasks:task_list' %}?status=completed" {% if current_status == 'completed' %}selected{% endif %}>Completed</option>
+                    <option value="{% url 'tasks:task_list' %}?status=approved" {% if current_status == 'approved' %}selected{% endif %}>Approved</option>
+                    <option value="{% url 'tasks:task_list' %}?status=queried" {% if current_status == 'queried' %}selected{% endif %}>Queried</option>
+                    <option value="{% url 'tasks:task_list' %}?status=declined" {% if current_status == 'declined' %}selected{% endif %}>Declined</option>
+                </select>
+            </div>
+            <div class="status-chips flex-grow-1">
+                <span class="badge bg-light text-dark border">Total: {{ total_count }}</span>
+                <span class="badge bg-warning text-dark">Pending: {{ pending_count }}</span>
+                <span class="badge bg-info text-dark">Accepted: {{ accepted_count }}</span>
+                <span class="badge bg-primary">Processing: {{ processing_count }}</span>
+                <span class="badge bg-success">Completed: {{ completed_count }}</span>
+                <span class="badge text-bg-success">Approved: {{ approved_count }}</span>
+                <span class="badge bg-danger">Queried: {{ queried_count }}</span>
+                <span class="badge bg-dark">Declined: {{ declined_count }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if tasks %}
+<div class="card dashboard-card table-shell">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Task</th>
+                    <th>Type</th>
+                    <th>{% if user|has_role:'super_admin,admin' %}Assigned To{% else %}Assigned By{% endif %}</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Due Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for task in tasks %}
+                <tr>
+                    <td>
+                        <div class="fw-semibold">{{ task.title }}</div>
+                        <div class="small text-muted">{{ task.description|truncatewords:12 }}</div>
+                    </td>
+                    <td><span class="badge bg-secondary">{{ task.get_task_type_display }}</span></td>
+                    <td>
+                        {% if user|has_role:'super_admin,admin' %}
+                        {{ task.assigned_to.get_full_name|default:task.assigned_to.username }}
+                        {% else %}
+                        {{ task.created_by.get_full_name|default:task.created_by.username }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if task.priority == 'high' or task.priority == 'urgent' %}
+                        <span class="badge bg-danger">{{ task.get_priority_display }}</span>
+                        {% elif task.priority == 'medium' %}
+                        <span class="badge bg-warning text-dark">Medium</span>
+                        {% else %}
+                        <span class="badge bg-success">Low</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge bg-{{ task.get_status_color }}">{{ task.get_status_display }}</span>
+                        {% if task.is_overdue %}<span class="badge bg-danger ms-1">Overdue</span>{% endif %}
+                    </td>
+                    <td>
+                        <div>{{ task.expected_completion|date:"M d, Y" }}</div>
+                        <div class="small text-muted">{{ task.expected_completion|time }}</div>
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{% url 'tasks:task_detail' task.id %}" class="btn btn-outline-primary" title="View">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            {% if user == task.created_by or user|has_role:'super_admin,admin' %}
+                            <a href="{% url 'tasks:update_task' task.id %}" class="btn btn-outline-secondary" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{% url 'tasks:delete_task' task.id %}" class="btn btn-outline-danger" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card dashboard-card">
+    <div class="empty-state">
+        <i class="bi bi-inbox"></i>
+        <h4>No tasks found</h4>
+        <p>There are no tasks matching your current filters.</p>
+        {% if user|has_role:'super_admin,admin' %}
+        <a href="{% url 'tasks:create_task' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i>Create Your First Task
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

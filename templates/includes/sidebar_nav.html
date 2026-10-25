@@ -1,0 +1,122 @@
+{% load role_tags %}
+
+<li class="nav-item">
+    <a class="nav-link {% if request.resolver_match.app_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard:dashboard' %}">
+        <i class="bi bi-speedometer2"></i>
+        <span>Dashboard</span>
+    </a>
+</li>
+
+{% if user|has_role:'super_admin,admin' %}
+<li class="nav-item">
+    <a class="nav-link" href="/admin/auth/user/">
+        <i class="bi bi-people"></i>
+        <span>User Management</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link {% if request.resolver_match.app_name == 'tasks' %}active{% endif %}" href="{% url 'tasks:task_list' %}">
+        <i class="bi bi-list-task"></i>
+        <span>All Tasks</span>
+        <span class="badge bg-danger">{{ total_count|default:0 }}</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link" href="{% url 'tasks:create_task' %}">
+        <i class="bi bi-plus-circle"></i>
+        <span>Create Task</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link {% if 'admin/withdrawal' in request.path %}active{% endif %}" href="{% url 'wallet:admin_withdrawal_list' %}">
+        <i class="bi bi-cash-stack"></i>
+        <span>Withdrawals</span>
+    </a>
+</li>
+{% endif %}
+
+{% if user.user_type == 'staff' %}
+<li class="nav-item">
+    <a class="nav-link {% if request.resolver_match.app_name == 'tasks' and not request.GET.status %}active{% endif %}" href="{% url 'tasks:task_list' %}">
+        <i class="bi bi-inbox"></i>
+        <span>My Tasks</span>
+        <span class="badge bg-primary">{{ user.assigned_tasks.count }}</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link" href="{% url 'tasks:task_list' %}?status=pending">
+        <i class="bi bi-clock-history"></i>
+        <span>Pending Tasks</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link" href="{% url 'tasks:task_list' %}?status=processing">
+        <i class="bi bi-gear"></i>
+        <span>In Progress</span>
+    </a>
+</li>
+{% endif %}
+
+{% if user.user_type == 'partner' %}
+<li class="nav-item">
+    <a class="nav-link {% if request.resolver_match.app_name == 'partners' %}active{% endif %}" href="{% url 'partners:partner_dashboard' %}">
+        <i class="bi bi-briefcase"></i>
+        <span>Partner Portal</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link {% if request.resolver_match.app_name == 'tasks' %}active{% endif %}" href="{% url 'tasks:task_list' %}">
+        <i class="bi bi-clock-history"></i>
+        <span>My Submissions</span>
+    </a>
+</li>
+{% endif %}
+
+{% if user|has_role:'staff,partner' %}
+<li class="nav-item">
+    <a class="nav-link {% if request.resolver_match.app_name == 'wallet' and 'admin' not in request.path %}active{% endif %}" href="{% url 'wallet:wallet_detail' %}">
+        <i class="bi bi-wallet2"></i>
+        <span>My Wallet</span>
+        <span class="badge bg-success">${{ sidebar_wallet_balance|default:"0.00" }}</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link" href="{% url 'wallet:withdrawal_request' %}">
+        <i class="bi bi-arrow-up-circle"></i>
+        <span>Withdraw</span>
+    </a>
+</li>
+{% endif %}
+
+<li class="nav-item">
+    <a class="nav-link {% if request.resolver_match.app_name == 'documents' %}active{% endif %}" href="{% url 'documents:document_list' %}">
+        <i class="bi bi-folder2-open"></i>
+        <span>Documents</span>
+    </a>
+</li>
+
+{% if user|has_role:'super_admin,admin' %}
+<span class="sidebar-section-label">Analytics</span>
+<li class="nav-item">
+    <a class="nav-link {% if request.resolver_match.app_name == 'reports' %}active{% endif %}" href="{% url 'reports:report_list' %}">
+        <i class="bi bi-bar-chart"></i>
+        <span>Reports</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link {% if request.resolver_match.app_name == 'audit' %}active{% endif %}" href="{% url 'audit:audit_log' %}">
+        <i class="bi bi-journal-text"></i>
+        <span>Audit Log</span>
+    </a>
+</li>
+{% endif %}
+
+{% if user.user_type == 'super_admin' %}
+<span class="sidebar-section-label">System</span>
+<li class="nav-item">
+    <a class="nav-link" href="/admin/">
+        <i class="bi bi-gear"></i>
+        <span>System Admin</span>
+    </a>
+</li>
+{% endif %}

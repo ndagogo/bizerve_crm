@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications - 2c2d Solutions{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="page-toolbar">
+    <div>
+        <h4>My Notifications</h4>
+        <p>Updates about tasks assigned to you or created by you.</p>
+    </div>
+    <form method="post" action="{% url 'notifications:mark_all_read' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-secondary btn-sm">Mark all read</button>
+    </form>
+</div>
+
+<div class="card dashboard-card">
+    {% if notifications %}
+    <div class="list-group list-group-flush">
+        {% for n in notifications %}
+        <div class="list-group-item d-flex justify-content-between align-items-start gap-3 {% if not n.is_read %}bg-light{% endif %}">
+            <div>
+                <p class="mb-1">{{ n.message }}</p>
+                <small class="text-muted">{{ n.sent_at|date:"M d, Y H:i" }} · {{ n.get_notification_type_display }}</small>
+                {% if n.related_task %}
+                <div class="mt-1"><a href="{% url 'tasks:task_detail' n.related_task.id %}">View related task</a></div>
+                {% endif %}
+            </div>
+            {% if not n.is_read %}
+            <form method="post" action="{% url 'notifications:mark_read' n.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-primary">Mark read</button>
+            </form>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="bi bi-bell"></i>
+        <h4>No notifications yet</h4>
+        <p>You'll be notified when tasks change status.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

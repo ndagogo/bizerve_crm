@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Withdrawal History - 2c2d Solutions{% endblock %}
+{% block page_title %}Withdrawal History{% endblock %}
+
+{% block content %}
+<div class="page-toolbar">
+    <div>
+        <h4>My Withdrawals</h4>
+        <p>Track and manage your payout requests.</p>
+    </div>
+    <a href="{% url 'wallet:withdrawal_request' %}" class="btn btn-primary">New Withdrawal</a>
+</div>
+
+<div class="card dashboard-card table-shell">
+    {% if withdrawals %}
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Method</th>
+                    <th>Amount</th>
+                    <th>Net</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for w in withdrawals %}
+                <tr>
+                    <td>#{{ w.id }}</td>
+                    <td>{{ w.withdrawal_method.name }}</td>
+                    <td>${{ w.amount }}</td>
+                    <td>${{ w.net_amount }}</td>
+                    <td><span class="badge bg-{{ w.get_status_color }}">{{ w.get_status_display }}</span></td>
+                    <td>{{ w.created_at|date:"M d, Y" }}</td>
+                    <td>
+                        {% if w.can_cancel %}
+                        <a href="{% url 'wallet:cancel_withdrawal' w.id %}" class="btn btn-sm btn-outline-danger">Cancel</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="bi bi-arrow-up-circle"></i>
+        <h4>No withdrawal requests yet</h4>
+        <p>Submit a request when you're ready to cash out.</p>
+        <a href="{% url 'wallet:withdrawal_request' %}" class="btn btn-primary">Request Withdrawal</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

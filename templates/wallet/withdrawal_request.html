@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}Request Withdrawal - 2c2d Solutions{% endblock %}
+{% block page_title %}Request Withdrawal{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card dashboard-card mb-3">
+            <div class="card-body text-center py-4">
+                <p class="stat-label mb-1">Available Balance</p>
+                <h3 class="stat-number text-success mb-0">${{ wallet.balance }}</h3>
+            </div>
+        </div>
+
+        <div class="card dashboard-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Withdrawal Request</h5>
+            </div>
+            <div class="card-body p-4">
+                {% if withdrawal_methods %}
+                <div class="row g-3 mb-4">
+                    {% for method in withdrawal_methods %}
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 h-100" style="border-color: var(--border) !important;">
+                            <div class="fw-semibold mb-1">{{ method.name }}</div>
+                            <p class="small text-muted mb-2">{{ method.description|default:"—" }}</p>
+                            <div class="small d-flex justify-content-between"><span>Fee</span><span>{% if method.fee_type == 'fixed' %}${{ method.fee_amount }}{% else %}{{ method.fee_percentage }}%{% endif %}</span></div>
+                            <div class="small d-flex justify-content-between"><span>Min</span><span>${{ method.minimum_amount }}</span></div>
+                            <div class="small d-flex justify-content-between"><span>Processing</span><span>{{ method.processing_time }}</span></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-warning">No withdrawal methods available at the moment.</div>
+                {% endif %}
+
+                <form method="post" id="withdrawalForm">
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                    {% endif %}
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="id_withdrawal_method">Withdrawal Method</label>
+                            <select name="withdrawal_method" id="id_withdrawal_method" class="form-select" required>
+                                <option value="">Select a method</option>
+                                {% for method in withdrawal_methods %}
+                                <option value="{{ method.id }}"
+                                    data-type="{{ method.withdrawal_type }}"
+                                    data-fee-type="{{ method.fee_type }}"
+                                    data-fee-amount="{{ method.fee_amount }}"
+                                    data-fee-percentage="{{ method.fee_percentage }}"
+                                    {% if form.withdrawal_method.value|stringformat:"s" == method.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ method.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% if form.withdrawal_method.errors %}<div class="text-danger small">{{ form.withdrawal_method.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ form.amount.id_for_label }}">Amount</label>
+                            {{ form.amount }}
+                            {% if form.amount.errors %}<div class="text-danger small">{{ form.amount.errors }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <div id="methodFields" class="mt-3"></div>
+
+                    <div class="border rounded p-3 my-4" style="background:#f8fafc;">
+                        <div class="row text-center g-2">
+                            <div class="col-4">
+                                <div class="small text-muted">Amount</div>
+                                <div class="fw-bold" id="amountDisplay">$0.00</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="small text-muted">Fee</div>
+                                <div class="fw-bold text-danger" id="feeDisplay">$0.00</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="small text-muted">You Receive</div>
+                                <div class="fw-bold text-success" id="netDisplay">$0.00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">Submit Request</button>
+                        <a href="{% url 'wallet:wallet_detail' %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const methodSelect = document.getElementById('id_withdrawal_method');
+    const amountInput = document.getElementById('{{ form.amount.id_for_label }}');
+    const methodFields = document.getElementById('methodFields');
+    const amountDisplay = document.getElementById('amountDisplay');
+    const feeDisplay = document.getElementById('feeDisplay');
+    const netDisplay = document.getElementById('netDisplay');
+
+    const fields = {
+        bank: `
+            <div class="row g-3">
+                <div class="col-md-4"><label class="form-label">Bank Name</label><input type="text" class="form-control" name="bank_name" required></div>
+                <div class="col-md-4"><label class="form-label">Account Number</label><input type="text" class="form-control" name="account_number" required></div>
+                <div class="col-md-4"><label class="form-label">Account Name</label><input type="text" class="form-control" name="account_name" required></div>
+            </div>`,
+        paypal: `<div class="mb-0"><label class="form-label">PayPal Email</label><input type="email" class="form-control" name="paypal_email" required></div>`,
+        crypto: `<div class="mb-0"><label class="form-label">Crypto Wallet Address</label><input type="text" class="form-control" name="crypto_wallet" required></div>`,
+        mobile_money: `<div class="mb-0"><label class="form-label">Mobile Number</label><input type="text" class="form-control" name="mobile_number" required></div>`,
+        card: `<div class="alert alert-info mb-0 py-2">Card withdrawals use details confirmed by admin during processing.</div>`
+    };
+
+    function updateFields() {
+        const option = methodSelect.options[methodSelect.selectedIndex];
+        const type = option ? option.getAttribute('data-type') : null;
+        methodFields.innerHTML = fields[type] || '';
+        calculateFees();
+    }
+
+    function calculateFees() {
+        const amount = parseFloat(amountInput.value) || 0;
+        const option = methodSelect.options[methodSelect.selectedIndex];
+        const feeType = option ? option.getAttribute('data-fee-type') : null;
+        const feeAmount = parseFloat(option && option.getAttribute('data-fee-amount')) || 0;
+        const feePercentage = parseFloat(option && option.getAttribute('data-fee-percentage')) || 0;
+        let fee = 0;
+        if (feeType === 'fixed') fee = feeAmount;
+        else if (feeType === 'percentage') fee = (amount * feePercentage) / 100;
+        amountDisplay.textContent = '$' + amount.toFixed(2);
+        feeDisplay.textContent = '$' + fee.toFixed(2);
+        netDisplay.textContent = '$' + Math.max(amount - fee, 0).toFixed(2);
+    }
+
+    methodSelect.addEventListener('change', updateFields);
+    amountInput.addEventListener('input', calculateFees);
+    updateFields();
+});
+</script>
+{% endblock %}

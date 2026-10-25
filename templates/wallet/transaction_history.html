@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}Transaction History - 2c2d Solutions{% endblock %}
+{% block page_title %}Transaction History{% endblock %}
+
+{% block content %}
+<div class="page-toolbar">
+    <div>
+        <h4>All Transactions</h4>
+        <p>Complete history for your wallet activity.</p>
+    </div>
+    <a href="{% url 'wallet:wallet_detail' %}" class="btn btn-outline-secondary">Back to Wallet</a>
+</div>
+
+<div class="card dashboard-card table-shell">
+    {% if transactions %}
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="card-title mb-0">Transactions</h6>
+        <span class="badge bg-light text-dark border">Total: {{ transactions.count }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Date & Time</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Related Task</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for transaction in transactions %}
+                <tr>
+                    <td>
+                        <div>{{ transaction.created_at|date:"M d, Y" }}</div>
+                        <div class="small text-muted">{{ transaction.created_at|time }}</div>
+                    </td>
+                    <td>{{ transaction.description }}</td>
+                    <td>
+                        {% if transaction.transaction_type == 'credit' %}
+                        <span class="badge bg-success">Credit</span>
+                        {% else %}
+                        <span class="badge bg-danger">Debit</span>
+                        {% endif %}
+                    </td>
+                    <td class="fw-semibold {% if transaction.transaction_type == 'credit' %}text-success{% else %}text-danger{% endif %}">
+                        {% if transaction.transaction_type == 'credit' %}+{% else %}-{% endif %}${{ transaction.amount }}
+                    </td>
+                    <td>
+                        {% if transaction.task %}
+                        <a href="{% url 'tasks:task_detail' transaction.task.id %}" class="btn btn-sm btn-outline-primary">View Task</a>
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="bi bi-credit-card"></i>
+        <h4>No Transactions</h4>
+        <p>You haven't made any transactions yet.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

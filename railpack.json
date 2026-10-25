@@ -1,0 +1,14 @@
+{
+  "$schema": "https://schema.railpack.com",
+  "steps": {
+    "build": {
+      "commands": [
+        "...",
+        "/app/.venv/bin/python manage.py collectstatic --noinput"
+      ]
+    }
+  },
+  "deploy": {
+    "startCommand": "/app/.venv/bin/python manage.py migrate --noinput && /app/.venv/bin/gunicorn business_process.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2 --timeout 120"
+  }
+}

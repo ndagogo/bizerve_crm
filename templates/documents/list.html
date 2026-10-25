@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Documents - 2c2d Solutions{% endblock %}
+{% block page_title %}Documents{% endblock %}
+
+{% block content %}
+<div class="page-toolbar">
+    <div>
+        <h4>Documents</h4>
+        <p>Files uploaded across your accessible tasks.</p>
+    </div>
+</div>
+
+<div class="card dashboard-card table-shell">
+    {% if documents %}
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Task</th>
+                    <th>Uploaded By</th>
+                    <th>Date</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in documents %}
+                <tr>
+                    <td>{{ doc.document_type }}</td>
+                    <td><a href="{% url 'tasks:task_detail' doc.task.id %}">{{ doc.task.title }}</a></td>
+                    <td>{{ doc.uploaded_by.username }}</td>
+                    <td>{{ doc.uploaded_at|date:"M d, Y" }}</td>
+                    <td><a href="{{ doc.file.url }}" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener">Download</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="bi bi-folder-x"></i>
+        <h4>No documents found</h4>
+        <p>Uploaded task documents will appear here.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

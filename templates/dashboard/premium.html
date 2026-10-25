@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+{% load role_tags %}
+
+{% block title %}{{ dashboard_title }} - 2c2d Solutions{% endblock %}
+{% block page_title %}{{ dashboard_title }}{% endblock %}
+
+{% block content %}
+<div class="card welcome-banner mb-4">
+    <div class="card-body">
+        <h3 class="card-title">Welcome back, {{ user.get_full_name|default:user.username }}</h3>
+        <p class="mb-0 opacity-75">
+            Here's an overview of your {{ user.get_user_type_display|lower }} account.
+            <span class="badge bg-light text-dark ms-1">{{ dashboard_type|upper }}</span>
+        </p>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    {% if user|has_role:'super_admin,admin' %}
+    <div class="col-6 col-xl-3">
+        <div class="card dashboard-card">
+            <div class="card-body stat-card">
+                <p class="stat-label">Total Users</p>
+                <h3 class="stat-number text-primary">{{ total_users }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="card dashboard-card">
+            <div class="card-body stat-card">
+                <p class="stat-label">Active Tasks</p>
+                <h3 class="stat-number text-success">{{ active_tasks }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="card dashboard-card">
+            <div class="card-body stat-card">
+                <p class="stat-label">Pending Approval</p>
+                <h3 class="stat-number text-warning">{{ pending_approval }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="card dashboard-card">
+            <div class="card-body stat-card">
+                <p class="stat-label">Total Credits</p>
+                <h3 class="stat-number text-info">${{ total_revenue }}</h3>
+            </div>
+        </div>
+    </div>
+    {% elif user.user_type == 'staff' %}
+    <div class="col-6 col-xl-3">
+        <div class="card dashboard-card">
+            <div class="card-body stat-card">
+                <p class="stat-label">Assigned Tasks</p>
+                <h3 class="stat-number text-primary">{{ assigned_count }}</h3>
+                {% if due_today_count %}<span class="stat-meta">{{ due_today_count }} due today</span>{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="card dashboard-card">
+            <div class="card-body stat-card">
+                <p class="stat-label">Approved</p>
+                <h3 class="stat-number text-success">{{ completed_count }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="card dashboard-card">
+            <div class="card-body stat-card">
+                <p class="stat-label">In Progress</p>
+                <h3 class="stat-number text-warning">{{ in_progress_count }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="card dashboard-card">
+            <div class="card-body stat-card">
+                <p class="stat-label">Wallet Balance</p>
+                <h3 class="stat-number text-info">${{ wallet_balance }}</h3>
+            </div>
+        </div>
+    </div>
+    {% elif user.user_type == 'partner' %}
+    <div class="col-6 col-xl-3">
+        <div class="card dashboard-card">
+            <div class="card-body stat-card">
+                <p class="stat-label">Jobs Submitted</p>
+                <h3 class="stat-number text-primary">{{ jobs_submitted }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="card dashboard-card">
+            <div class="card-body stat-card">
+                <p class="stat-label">Completed</p>
+                <h3 class="stat-number text-success">{{ jobs_completed }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="card dashboard-card">
+            <div class="card-body stat-card">
+                <p class="stat-label">In Progress</p>
+                <h3 class="stat-number text-warning">{{ jobs_in_progress }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="card dashboard-card">
+            <div class="card-body stat-card">
+                <p class="stat-label">Total Spent</p>
+                <h3 class="stat-number text-info">${{ total_spent }}</h3>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="card dashboard-card">
+            <div class="card-header">
+                <h5 class="card-title">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    {% if user|has_role:'super_admin,admin' %}
+                    <div class="col-sm-4">
+                        <a href="{% url 'tasks:create_task' %}" class="action-tile">
+                            <i class="bi bi-plus-circle"></i>
+                            Create Task
+                        </a>
+                    </div>
+                    <div class="col-sm-4">
+                        <a href="{% url 'reports:report_list' %}" class="action-tile">
+                            <i class="bi bi-bar-chart"></i>
+                            Reports
+                        </a>
+                    </div>
+                    <div class="col-sm-4">
+                        <a href="{% url 'wallet:admin_withdrawal_list' %}" class="action-tile">
+                            <i class="bi bi-cash-stack"></i>
+                            Withdrawals
+                        </a>
+                    </div>
+                    {% elif user.user_type == 'staff' %}
+                    <div class="col-sm-6">
+                        <a href="{% url 'tasks:task_list' %}" class="action-tile">
+                            <i class="bi bi-inbox"></i>
+                            My Tasks
+                        </a>
+                    </div>
+                    <div class="col-sm-6">
+                        <a href="{% url 'wallet:wallet_detail' %}" class="action-tile">
+                            <i class="bi bi-wallet2"></i>
+                            My Wallet
+                        </a>
+                    </div>
+                    {% elif user.user_type == 'partner' %}
+                    <div class="col-sm-6">
+                        <a href="{% url 'partners:partner_dashboard' %}" class="action-tile">
+                            <i class="bi bi-briefcase"></i>
+                            Partner Portal
+                        </a>
+                    </div>
+                    <div class="col-sm-6">
+                        <a href="{% url 'tasks:task_list' %}" class="action-tile">
+                            <i class="bi bi-list-task"></i>
+                            My Submissions
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card dashboard-card">
+            <div class="card-header">
+                <h5 class="card-title">System Status</h5>
+            </div>
+            <div class="card-body d-flex flex-column justify-content-center" style="min-height: 140px;">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge bg-success">Operational</span>
+                </div>
+                <p class="text-muted small mb-0">{{ total_tasks|default:"0" }} total tasks in the system.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card dashboard-card">
+    <div class="card-header">
+        <h5 class="card-title">Recent Activity</h5>
+    </div>
+    <div class="card-body">
+        {% if recent_activity %}
+        <div class="list-group list-group-flush">
+            {% for item in recent_activity %}
+            <div class="list-group-item px-0 py-3">
+                <div class="d-flex justify-content-between gap-3 flex-wrap">
+                    <div>
+                        <div class="small text-muted mb-1">{{ item.created_at|timesince }} ago</div>
+                        <span class="fw-semibold">{{ item.user.get_full_name|default:item.user.username }}</span>
+                        <span class="text-muted">— {{ item.comment|truncatechars:90 }}</span>
+                    </div>
+                    <a href="{% url 'tasks:task_detail' item.task.id %}" class="small align-self-center">View task</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state py-4">
+            <p class="mb-0">No recent activity yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
