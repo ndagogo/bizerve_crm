@@ -32,8 +32,11 @@ ALLOWED_HOSTS = config(
 )
 
 # Railway's edge and health checker use hostnames that are not in the local .env.
+# crm.auxanosoft.com is the public custom domain. It is not a *.railway.app host,
+# so it has to be listed here or Django rejects the request.
+CUSTOM_HOSTS = ('crm.auxanosoft.com',)
 if ON_RAILWAY:
-    for host in ('.railway.app', '.up.railway.app', 'healthcheck.railway.app'):
+    for host in ('.railway.app', '.up.railway.app', 'healthcheck.railway.app', *CUSTOM_HOSTS):
         if host not in ALLOWED_HOSTS:
             ALLOWED_HOSTS.append(host)
     public_domain = os.environ.get('RAILWAY_PUBLIC_DOMAIN', '').strip()
@@ -42,7 +45,11 @@ if ON_RAILWAY:
 
 CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='', cast=_csv)
 if ON_RAILWAY:
-    for origin in ('https://*.up.railway.app', 'https://*.railway.app'):
+    for origin in (
+        'https://*.up.railway.app',
+        'https://*.railway.app',
+        *(f'https://{host}' for host in CUSTOM_HOSTS),
+    ):
         if origin not in CSRF_TRUSTED_ORIGINS:
             CSRF_TRUSTED_ORIGINS.append(origin)
     public_domain = os.environ.get('RAILWAY_PUBLIC_DOMAIN', '').strip()
