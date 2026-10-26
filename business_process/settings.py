@@ -27,7 +27,7 @@ if not DEBUG and SECRET_KEY == _INSECURE_SECRET_KEY:
 
 ALLOWED_HOSTS = config(
     'ALLOWED_HOSTS',
-    default='localhost,127.0.0.1,0.0.0.0',
+    default='localhost,127.0.0.1,0.0.0.0,crm.auxanosoft.com',
     cast=_csv,
 )
 
