@@ -7,11 +7,14 @@ from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Railway injects RAILWAY_ENVIRONMENT on every deploy. Local runs leave it unset,
-# so the same settings file keeps SQLite, DEBUG, and HTTP cookies on your machine.
-
-# Railway detection
-ON_RAILWAY = bool(os.environ.get('RAILWAY_ENVIRONMENT'))
+# Railway usually injects RAILWAY_ENVIRONMENT. This shell did not have it,
+# so host rules cannot depend on that variable alone.
+ON_RAILWAY = bool(
+    os.environ.get('RAILWAY_ENVIRONMENT')
+    or os.environ.get('RAILWAY_PROJECT_ID')
+    or os.environ.get('RAILWAY_SERVICE_ID')
+    or os.environ.get('RAILWAY_PUBLIC_DOMAIN')
+)
 
 # Secret key and debug mode
 SECRET_KEY = config('SECRET_KEY')
@@ -33,20 +36,6 @@ ALLOWED_HOSTS = config(
     cast=_csv,
 )
 
-if ON_RAILWAY:
-    for host in (
-        '.railway.app',
-        '.up.railway.app',
-        'healthcheck.railway.app',
-        'crm.auxanosoft.com',
-    ):
-        if host not in ALLOWED_HOSTS:
-            ALLOWED_HOSTS.append(host)
-
-    public_domain = os.environ.get('RAILWAY_PUBLIC_DOMAIN', '').strip()
-    if public_domain and public_domain not in ALLOWED_HOSTS:
-        ALLOWED_HOSTS.append(public_domain)
-
 # CSRF trusted origins
 CSRF_TRUSTED_ORIGINS = config(
     'CSRF_TRUSTED_ORIGINS',
@@ -54,20 +43,33 @@ CSRF_TRUSTED_ORIGINS = config(
     cast=_csv,
 )
 
-if ON_RAILWAY:
-    for origin in (
-        'https://*.up.railway.app',
-        'https://*.railway.app',
-        'https://crm.auxanosoft.com',
-    ):
-        if origin not in CSRF_TRUSTED_ORIGINS:
-            CSRF_TRUSTED_ORIGINS.append(origin)
+# An explicit ALLOWED_HOSTS=localhost,... on Railway replaces the default
+# and drops the public domain. Append it after the environment value.
+CUSTOM_HOSTS = ('crm.auxanosoft.com',)
 
+
+def _append_unique(values, extras):
+    for item in extras:
+        if item and item not in values:
+            values.append(item)
+
+
+_append_unique(ALLOWED_HOSTS, CUSTOM_HOSTS)
+_append_unique(CSRF_TRUSTED_ORIGINS, [f'https://{host}' for host in CUSTOM_HOSTS])
+
+if ON_RAILWAY or not DEBUG:
+    _append_unique(
+        ALLOWED_HOSTS,
+        ('.railway.app', '.up.railway.app', 'healthcheck.railway.app'),
+    )
     public_domain = os.environ.get('RAILWAY_PUBLIC_DOMAIN', '').strip()
     if public_domain:
-        origin = f'https://{public_domain}'
-        if origin not in CSRF_TRUSTED_ORIGINS:
-            CSRF_TRUSTED_ORIGINS.append(origin)
+        _append_unique(ALLOWED_HOSTS, [public_domain])
+        _append_unique(CSRF_TRUSTED_ORIGINS, [f'https://{public_domain}'])
+    _append_unique(
+        CSRF_TRUSTED_ORIGINS,
+        ['https://*.up.railway.app', 'https://*.railway.app'],
+    )
 
 
 INSTALLED_APPS = [
