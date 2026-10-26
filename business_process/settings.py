@@ -9,21 +9,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Railway injects RAILWAY_ENVIRONMENT on every deploy. Local runs leave it unset,
 # so the same settings file keeps SQLite, DEBUG, and HTTP cookies on your machine.
+
+# Railway detection
 ON_RAILWAY = bool(os.environ.get('RAILWAY_ENVIRONMENT'))
 
-
-def _csv(value):
-    return [item.strip() for item in value.split(',') if item.strip()]
-
-
+# Secret key and debug mode
+SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=not ON_RAILWAY, cast=bool)
 
-_INSECURE_SECRET_KEY = 'django-insecure-change-this-in-production-!'
-SECRET_KEY = config('SECRET_KEY', default=_INSECURE_SECRET_KEY)
-if not DEBUG and SECRET_KEY == _INSECURE_SECRET_KEY:
+if not DEBUG and SECRET_KEY == 'django-insecure-change-this-in-production-!':
+    from django.core.exceptions import ImproperlyConfigured
     raise ImproperlyConfigured(
-        'Set a unique SECRET_KEY in the environment when DEBUG is False.'
+        'Set a secure SECRET_KEY in the environment when DEBUG is False.'
     )
+
+# Allowed hosts
+def _csv(value):
+    return [item.strip() for item in value.split(',') if item.strip()]
 
 ALLOWED_HOSTS = config(
     'ALLOWED_HOSTS',
@@ -31,32 +33,42 @@ ALLOWED_HOSTS = config(
     cast=_csv,
 )
 
-# Railway's edge and health checker use hostnames that are not in the local .env.
-# crm.auxanosoft.com is the public custom domain. It is not a *.railway.app host,
-# so it has to be listed here or Django rejects the request.
-CUSTOM_HOSTS = ('crm.auxanosoft.com',)
 if ON_RAILWAY:
-    for host in ('.railway.app', '.up.railway.app', 'healthcheck.railway.app', *CUSTOM_HOSTS):
+    for host in (
+        '.railway.app',
+        '.up.railway.app',
+        'healthcheck.railway.app',
+        'crm.auxanosoft.com',
+    ):
         if host not in ALLOWED_HOSTS:
             ALLOWED_HOSTS.append(host)
+
     public_domain = os.environ.get('RAILWAY_PUBLIC_DOMAIN', '').strip()
     if public_domain and public_domain not in ALLOWED_HOSTS:
         ALLOWED_HOSTS.append(public_domain)
 
-CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='', cast=_csv)
+# CSRF trusted origins
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    default='https://crm.auxanosoft.com',
+    cast=_csv,
+)
+
 if ON_RAILWAY:
     for origin in (
         'https://*.up.railway.app',
         'https://*.railway.app',
-        *(f'https://{host}' for host in CUSTOM_HOSTS),
+        'https://crm.auxanosoft.com',
     ):
         if origin not in CSRF_TRUSTED_ORIGINS:
             CSRF_TRUSTED_ORIGINS.append(origin)
+
     public_domain = os.environ.get('RAILWAY_PUBLIC_DOMAIN', '').strip()
     if public_domain:
         origin = f'https://{public_domain}'
         if origin not in CSRF_TRUSTED_ORIGINS:
             CSRF_TRUSTED_ORIGINS.append(origin)
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
