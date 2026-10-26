@@ -6,6 +6,23 @@ from django.conf.urls.static import static
 from django.views.generic import RedirectView
 from django.views.static import serve
 
+from accounts.models import User
+
+_original_admin_get_urls = admin.site.get_urls
+
+
+def _admin_get_urls():
+    # /admin/auth/user/ is the user management page. accounts.User is also
+    # mounted at /admin/accounts/user/; this copy is registered last so admin
+    # links (add, change, delete) stay on /admin/auth/user/.
+    urlpatterns = _original_admin_get_urls()
+    user_admin = admin.site._registry[User]
+    user_management = path('auth/user/', include(user_admin.urls))
+    return urlpatterns[:-1] + [user_management, urlpatterns[-1]]
+
+
+admin.site.get_urls = _admin_get_urls
+
 
 def healthz(request):
     return HttpResponse('ok', content_type='text/plain')

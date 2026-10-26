@@ -1,5 +1,6 @@
 from django.core import mail
 from django.test import TestCase, override_settings
+from django.urls import reverse
 
 from accounts.forms import EmailExistsPasswordResetForm
 from accounts.models import User
@@ -66,3 +67,20 @@ class PasswordResetEmailTests(TestCase):
         self.assertIn('password', message.body.lower())
         self.assertTrue(message.alternatives)
         self.assertIn('/accounts/reset/', message.body)
+
+
+class UserManagementAdminTests(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_superuser(
+            username='usermgr',
+            email='usermgr@example.com',
+            password='OldPass123!',
+        )
+        self.client.force_login(self.admin)
+
+    def test_auth_user_url_is_user_management(self):
+        self.assertEqual(reverse('admin:accounts_user_changelist'), '/admin/auth/user/')
+        self.assertEqual(reverse('admin:accounts_user_add'), '/admin/auth/user/add/')
+        response = self.client.get('/admin/auth/user/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'User management')

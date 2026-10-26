@@ -36,6 +36,11 @@ class CustomUserAdmin(UserAdmin):
         return obj.get_full_name()
     full_name.short_description = 'Full Name'
 
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['title'] = 'User management'
+        return super().changelist_view(request, extra_context=extra_context)
+
 @admin.register(AdminLevel)
 class AdminLevelAdmin(admin.ModelAdmin):
     list_display = ('username', 'full_name', 'user_type', 'level_display', 'is_active', 'created_at')
