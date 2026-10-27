@@ -14,3 +14,7 @@ from django.core.wsgi import get_wsgi_application
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'business_process.settings')
 
 application = get_wsgi_application()
+
+from business_process.boot import apply_pending_migrations
+
+apply_pending_migrations()
