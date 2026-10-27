@@ -5,17 +5,15 @@ portal hit a missing-table error. Running migrate here uses the same
 process, settings, and DATABASE_URL as the running site.
 """
 
-import logging
-
 from django.conf import settings
 from django.core.management import call_command
 
 
-logger = logging.getLogger(__name__)
-
-
 def apply_pending_migrations():
-    if settings.DEBUG:
+    """Migrate before serving, including when production still has DEBUG on."""
+    engine = settings.DATABASES['default']['ENGINE']
+    if settings.DEBUG and engine.endswith('sqlite3'):
         return
-    logger.warning('Applying database migrations before serving requests.')
+    print('Applying database migrations before serving requests.', flush=True)
     call_command('migrate', interactive=False, verbosity=1)
+    print('Database migrations finished.', flush=True)
