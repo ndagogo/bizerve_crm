@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.core.exceptions import ValidationError
 
@@ -81,3 +82,37 @@ class AdminLevel(models.Model):
     @property
     def user_type(self):
         return self.user.get_user_type_display()
+
+
+class SessionPolicy(models.Model):
+    """The one row that controls idle sign-out for every account."""
+
+    inactivity_timeout_minutes = models.PositiveIntegerField(
+        default=30,
+        validators=[MinValueValidator(1), MaxValueValidator(1440)],
+        verbose_name='Inactivity limit (minutes)',
+        help_text='Sign users out after this many minutes without a request. Use 1 to 1,440.',
+    )
+    is_enabled = models.BooleanField(
+        default=True,
+        verbose_name='Sign out after inactivity',
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Session policy'
+        verbose_name_plural = 'Session policy'
+
+    def __str__(self):
+        if not self.is_enabled:
+            return 'Inactivity sign-out is off'
+        return f'Sign out after {self.inactivity_timeout_minutes} idle minutes'
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        policy, _created = cls.objects.get_or_create(pk=1)
+        return policy

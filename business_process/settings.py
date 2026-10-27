@@ -120,6 +120,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'audit.middleware.AuditMiddleware',
+    'accounts.middleware.InactivityTimeoutMiddleware',
 ]
 
 ROOT_URLCONF = 'business_process.urls'

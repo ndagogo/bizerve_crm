@@ -9,9 +9,15 @@
 
 {% if user|has_role:'super_admin,admin' %}
 <li class="nav-item">
-    <a class="nav-link" href="/admin/auth/user/">
+    <a class="nav-link {% if request.resolver_match.url_name == 'user_list' or request.resolver_match.url_name == 'user_create' or request.resolver_match.url_name == 'user_edit' or request.resolver_match.url_name == 'user_password' %}active{% endif %}" href="{% url 'accounts:user_list' %}">
         <i class="bi bi-people"></i>
         <span>User Management</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link {% if request.resolver_match.url_name == 'session_settings' %}active{% endif %}" href="{% url 'accounts:session_settings' %}">
+        <i class="bi bi-hourglass-split"></i>
+        <span>Session Timeout</span>
     </a>
 </li>
 <li class="nav-item">

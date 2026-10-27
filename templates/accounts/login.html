@@ -4,6 +4,12 @@
 {% block auth_subtitle %}Sign in to continue{% endblock %}
 
 {% block content %}
+{% if request.GET.session == 'expired' %}
+<div class="alert alert-warning py-2">
+    You were signed out after a period of inactivity. Sign in again to continue.
+</div>
+{% endif %}
+
 {% if form.errors %}
 <div class="alert alert-danger py-2">
     Your username and password didn't match. Please try again.
